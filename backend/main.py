@@ -32,7 +32,7 @@ knowledge_context = ""
 qa_chain = None
 
 KNOWLEDGE_BASE_DIR = Path(__file__).parent.parent / "knowledge_base"
-FRONTEND_INDEX = Path(__file__).parent.parent / "public" / "index.html"
+FRONTEND_INDEX = Path(__file__).parent.parent / "api" / "index.html"
 
 
 def _clear_broken_proxy_env() -> None:
