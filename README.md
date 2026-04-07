@@ -12,9 +12,9 @@ PayRoute AI takes a transaction context (amount, country, merchant category, pay
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
-| LLM Orchestration | LangChain `RetrievalQA` |
-| Vector Store | FAISS (local, no infra needed) |
-| Embeddings | Gemini `models/embedding-001` |
+| LLM Orchestration | Gemini SDK |
+| Knowledge Retrieval | Local markdown context |
+| Embeddings | Not required for Vercel deployment |
 | LLM | Gemini |
 | API | FastAPI + Uvicorn |
 | Frontend | Vanilla HTML/CSS/JS (zero deps) |
@@ -95,7 +95,6 @@ In the Vercel project settings, add:
 ```bash
 GOOGLE_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.5-flash
-GEMINI_EMBEDDING_MODEL=models/gemini-embedding-001
 ```
 
 ### 4. Deploy

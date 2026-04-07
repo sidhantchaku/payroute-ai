@@ -1,6 +1,6 @@
 """
 PayRoute AI - Backend API
-Intelligent Payment Gateway Routing using RAG + LangChain
+Intelligent Payment Gateway Routing using Gemini + local knowledge context
 """
 
 import os
@@ -13,12 +13,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from langchain_community.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -32,7 +27,7 @@ app.add_middleware(
 )
 
 # ─── Global State ───────────────────────────────────────────────────────────
-vectorstore = None
+knowledge_context = ""
 qa_chain = None
 
 KNOWLEDGE_BASE_DIR = Path(__file__).parent.parent / "knowledge_base"
@@ -79,8 +74,8 @@ class RouteResponse(BaseModel):
 # ─── Startup: Build Vector Store ─────────────────────────────────────────────
 
 @app.on_event("startup")
-async def build_vectorstore():
-    global vectorstore, qa_chain
+async def load_knowledge_base():
+    global knowledge_context, qa_chain
     _clear_broken_proxy_env()
 
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -89,44 +84,28 @@ async def build_vectorstore():
         return
 
     print("Loading knowledge base...")
-    docs = []
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-
+    sections = []
     for md_file in KNOWLEDGE_BASE_DIR.glob("*.md"):
-        loader = TextLoader(str(md_file))
-        raw = loader.load()
-        chunks = splitter.split_documents(raw)
-        # Tag each chunk with its source gateway
-        gateway_name = md_file.stem.capitalize()
-        for chunk in chunks:
-            chunk.metadata["gateway"] = gateway_name
-        docs.extend(chunks)
-        print(f"  Loaded {md_file.name} -> {len(chunks)} chunks")
+        sections.append(f"# Source: {md_file.name}\n{md_file.read_text(encoding='utf-8')}")
+        print(f"  Loaded {md_file.name}")
 
-    print(f"Total chunks: {len(docs)}")
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=os.getenv("GEMINI_EMBEDDING_MODEL", "models/gemini-embedding-001"),
-        google_api_key=api_key,
-    )
-    vectorstore = FAISS.from_documents(docs, embeddings)
-    print("Vector store built")
+    knowledge_context = "\n\n---\n\n".join(sections)
+    genai.configure(api_key=api_key)
+    qa_chain = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
+    print("Gemini model ready")
 
-    llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-        temperature=0.2,
-        google_api_key=api_key,
-    )
 
-    prompt_template = """
+def _build_prompt(query: str) -> str:
+    return f"""
 You are PayRoute AI, an expert payment gateway advisor for Indian and global payment infrastructure.
 
 Using the retrieved knowledge base context below, recommend the best payment gateways for this transaction.
 
 CONTEXT FROM KNOWLEDGE BASE:
-{context}
+{knowledge_context}
 
 TRANSACTION DETAILS:
-{question}
+{query}
 
 Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON) in this exact structure:
 {{
@@ -149,20 +128,6 @@ Respond ONLY with a valid JSON object (no markdown, no explanation outside JSON)
 Include exactly 3 ranked gateways. Be specific about fees using the actual transaction amount provided.
 """
 
-    PROMPT = PromptTemplate(
-        template=prompt_template,
-        input_variables=["context", "question"]
-    )
-
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vectorstore.as_retriever(search_kwargs={"k": 8}),
-        chain_type_kwargs={"prompt": PROMPT},
-        return_source_documents=True,
-    )
-    print("QA chain ready")
-
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
@@ -170,7 +135,7 @@ Include exactly 3 ranked gateways. Be specific about fees using the actual trans
 async def health():
     return {
         "status": "ok",
-        "vectorstore_ready": vectorstore is not None,
+        "vectorstore_ready": bool(knowledge_context),
         "chain_ready": qa_chain is not None,
     }
 
@@ -196,8 +161,11 @@ Consider fees, success rates, settlement timelines, compliance, and the merchant
 """
 
     try:
-        result = qa_chain.invoke({"query": query})
-        raw = result["result"].strip()
+        result = qa_chain.generate_content(
+            _build_prompt(query),
+            generation_config={"temperature": 0.2},
+        )
+        raw = result.text.strip()
 
         # Strip markdown code fences if present
         if raw.startswith("```"):
