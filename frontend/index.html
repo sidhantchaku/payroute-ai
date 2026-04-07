@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayRoute AI — Intelligent Payment Routing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #0f1117;
+  --bg3: #141820;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --accent: #00d4aa;
+  --accent2: #7c6cfa;
+  --accent3: #f59e0b;
+  --danger: #f87171;
+  --card-bg: rgba(255,255,255,0.03);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid noise bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,170,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,170,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-orb {
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.orb1 { background: rgba(0,212,170,0.06); top: -200px; left: -100px; }
+.orb2 { background: rgba(124,108,250,0.05); bottom: -200px; right: -100px; }
+
+/* ── Layout ── */
+.wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Header ── */
+header {
+  padding: 28px 0 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 14px; font-weight: 500;
+  color: #000;
+}
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.logo-text span { color: var(--accent); }
+.badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid rgba(0,212,170,0.3);
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 52px 0 40px;
+  text-align: center;
+}
+.hero-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 300;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Main grid ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 20px;
+  padding-bottom: 80px;
+}
+
+/* ── Form card ── */
+.form-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+}
+
+.form-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  margin-top: 24px;
+}
+.form-section-label:first-child { margin-top: 0; }
+
+.field { margin-bottom: 14px; }
+
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+
+input, select, textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  transition: border-color 0.2s;
+  outline: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(0,212,170,0.4);
+  background: rgba(0,212,170,0.03);
+}
+
+.amount-row { display: grid; grid-template-columns: 80px 1fr; gap: 8px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Priority chips */
+.priority-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--border-hover); color: var(--text); }
+.chip.active {
+  border-color: var(--accent);
+  background: rgba(0,212,170,0.1);
+  color: var(--accent);
+}
+
+/* CTA Button */
+.cta-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), #00b894);
+  color: #000;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.cta-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,170,0.25); }
+.cta-btn:active { transform: translateY(0); }
+.cta-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Results panel ── */
+.results-panel { min-height: 400px; }
+
+/* Empty state */
+.empty-state {
+  height: 400px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  color: var(--muted);
+}
+.empty-icon {
+  width: 56px; height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+  background: var(--bg3);
+}
+.empty-state h3 { font-family: 'Syne', sans-serif; font-size: 16px; color: var(--text); margin-bottom: 8px; }
+.empty-state p { font-size: 13px; max-width: 260px; line-height: 1.5; }
+
+/* Loading state */
+.loading-state {
+  display: none;
+  height: 400px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-state p {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+/* Summary box */
+.summary-box {
+  background: rgba(0,212,170,0.05);
+  border: 1px solid rgba(0,212,170,0.15);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: none;
+}
+.summary-box .summary-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.summary-box p { font-size: 14px; color: var(--text); line-height: 1.6; font-weight: 300; }
+
+/* Gateway cards */
+.gateway-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.gateway-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  transition: border-color 0.2s;
+  animation: fadeUp 0.4s ease both;
+}
+.gateway-card:hover { border-color: var(--border-hover); }
+.gateway-card.rank-1 { border-color: rgba(0,212,170,0.2); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gateway-card:nth-child(2) { animation-delay: 0.1s; }
+.gateway-card:nth-child(3) { animation-delay: 0.2s; }
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-left { display: flex; align-items: center; gap: 12px; }
+
+.gateway-avatar {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; font-weight: 500;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.gateway-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rank-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.rank-1 .rank-badge { color: var(--accent); }
+
+.score-display {
+  text-align: right;
+}
+.score-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+.rank-2 .score-num { color: var(--accent2); }
+.rank-3 .score-num { color: var(--accent3); }
+.score-label { font-size: 11px; color: var(--muted); }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.stat-cell {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.stat-key {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.stat-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* Reasons */
+.reasons { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.reason {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--muted); line-height: 1.4;
+}
+.reason::before {
+  content: '✓';
+  color: var(--accent);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Warnings */
+.warnings-list { display: flex; flex-direction: column; gap: 4px; }
+.warning-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 11px; color: var(--accent3); line-height: 1.4;
+  padding: 7px 10px;
+  background: rgba(245,158,11,0.06);
+  border-radius: 8px;
+}
+.warning-item::before { content: '⚠'; font-size: 10px; flex-shrink: 0; }
+
+/* RAG context */
+.rag-box {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(124,108,250,0.05);
+  border: 1px solid rgba(124,108,250,0.12);
+  border-radius: 12px;
+  display: none;
+}
+.rag-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--accent2);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.rag-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Error */
+.error-box {
+  background: rgba(248,113,113,0.07);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 14px;
+  padding: 20px;
+  display: none;
+}
+.error-box p { color: var(--danger); font-size: 13px; }
+
+/* Gateway color map */
+.gw-razorpay  { background: linear-gradient(135deg, #528FF0, #2F54EB); }
+.gw-stripe    { background: linear-gradient(135deg, #6772E5, #4B5DB5); }
+.gw-payu      { background: linear-gradient(135deg, #FF5A00, #D94400); }
+.gw-cashfree  { background: linear-gradient(135deg, #00B5AD, #007C76); }
+.gw-ccavenue  { background: linear-gradient(135deg, #E91E63, #C2185B); }
+.gw-default   { background: linear-gradient(135deg, var(--muted), #374151); }
+
+/* Mode pill */
+.mode-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.mode-demo { background: rgba(245,158,11,0.1); color: var(--accent3); border: 1px solid rgba(245,158,11,0.2); }
+.mode-live  { background: rgba(0,212,170,0.1); color: var(--accent);  border: 1px solid rgba(0,212,170,0.2); }
+
+/* Responsive */
+@media (max-width: 820px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .form-card { position: static; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">PR</div>
+      <div class="logo-text">Pay<span>Route</span> AI</div>
+    </div>
+    <div class="badge">RAG + LangChain</div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-label">Intelligent Payment Infrastructure</div>
+    <h1>Route every payment to the<br><em>optimal gateway</em></h1>
+    <p>AI-powered routing advisor that analyses gateways across fees, success rates, compliance, and settlement timelines — and explains every decision.</p>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- ── Form ── -->
+    <div class="form-card">
+
+      <div class="form-section-label">Transaction Details</div>
+
+      <div class="field">
+        <label>Amount</label>
+        <div class="amount-row">
+          <select id="currency">
+            <option value="INR">INR ₹</option>
+            <option value="USD">USD $</option>
+            <option value="EUR">EUR €</option>
+            <option value="GBP">GBP £</option>
+          </select>
+          <input type="number" id="amount" placeholder="50000" value="50000" min="1">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Country</label>
+          <select id="country">
+            <option>India</option>
+            <option>United States</option>
+            <option>United Kingdom</option>
+            <option>Singapore</option>
+            <option>UAE</option>
+            <option>Germany</option>
+            <option>Brazil</option>
+            <option>Australia</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Payment Method</label>
+          <select id="payment_method">
+            <option value="any">Any / Best</option>
+            <option value="upi">UPI</option>
+            <option value="card">Credit / Debit Card</option>
+            <option value="netbanking">Net Banking</option>
+            <option value="wallet">Wallet</option>
+            <option value="emi">EMI</option>
+            <option value="international">International Card</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Merchant Category</label>
+        <select id="category">
+          <option>E-commerce</option>
+          <option>SaaS / Software</option>
+          <option>EdTech</option>
+          <option>HealthTech</option>
+          <option>Travel & Hospitality</option>
+          <option>Food Delivery</option>
+          <option>Gaming</option>
+          <option>Lending / NBFC</option>
+          <option>Insurance</option>
+          <option>Marketplace</option>
+          <option>NGO / Nonprofit</option>
+          <option>Government / Utilities</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Transaction Type</label>
+        <select id="tx_type">
+          <option value="one_time">One-time payment</option>
+          <option value="subscription">Subscription / Recurring</option>
+          <option value="marketplace">Marketplace (split payout)</option>
+          <option value="payout">Payout / Disbursement</option>
+        </select>
+      </div>
+
+      <div class="form-section-label">Optimization Priority</div>
+      <div class="priority-chips">
+        <div class="chip active" data-val="balanced" onclick="setChip(this)">⚖ Balanced</div>
+        <div class="chip" data-val="cost" onclick="setChip(this)">💰 Low Cost</div>
+        <div class="chip" data-val="success_rate" onclick="setChip(this)">📈 Success Rate</div>
+        <div class="chip" data-val="speed" onclick="setChip(this)">⚡ Fastest Settlement</div>
+      </div>
+
+      <button class="cta-btn" id="routeBtn" onclick="getRecommendation()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Analyse & Route
+      </button>
+    </div>
+
+    <!-- ── Results ── -->
+    <div class="results-panel">
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🔀</div>
+        <h3>No analysis yet</h3>
+        <p>Fill in your transaction details and click Analyse & Route to get AI-powered gateway recommendations.</p>
+      </div>
+
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>Querying knowledge base + reasoning...</p>
+      </div>
+
+      <div id="resultsArea" style="display:none">
+        <div class="mode-pill mode-demo" id="modePill">● DEMO MODE</div>
+
+        <div class="summary-box" id="summaryBox">
+          <div class="summary-label">AI Summary</div>
+          <p id="summaryText"></p>
+        </div>
+
+        <div class="gateway-cards" id="gatewayCards"></div>
+
+        <div class="rag-box" id="ragBox">
+          <div class="rag-label">RAG Context Used</div>
+          <div class="rag-text" id="ragText"></div>
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox">
+        <p id="errorText"></p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.protocol === 'file:'
+  ? 'http://localhost:8000'
+  : '/api';
+let selectedPriority = 'balanced';
+
+function setChip(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedPriority = el.dataset.val;
+}
+
+function gatewayClass(name) {
+  const n = name.toLowerCase();
+  if (n.includes('razorpay')) return 'gw-razorpay';
+  if (n.includes('stripe'))   return 'gw-stripe';
+  if (n.includes('payu'))     return 'gw-payu';
+  if (n.includes('cashfree')) return 'gw-cashfree';
+  if (n.includes('ccavenue') || n.includes('cc avenue')) return 'gw-ccavenue';
+  return 'gw-default';
+}
+
+function initials(name) {
+  return name.split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function rankLabel(rank) {
+  if (rank === 1) return '🥇 Top pick';
+  if (rank === 2) return '🥈 Runner-up';
+  return '🥉 Alternative';
+}
+
+function renderCard(rec) {
+  const warnings = (rec.warnings || []).filter(Boolean);
+  return `
+    <div class="gateway-card rank-${rec.rank}">
+      <div class="card-header">
+        <div class="card-left">
+          <div class="gateway-avatar ${gatewayClass(rec.gateway)}">${initials(rec.gateway)}</div>
+          <div>
+            <div class="gateway-name">${rec.gateway}</div>
+            <div class="rank-badge">${rankLabel(rec.rank)}</div>
+          </div>
+        </div>
+        <div class="score-display">
+          <div class="score-num">${rec.score}</div>
+          <div class="score-label">/ 10 score</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-key">Est. Fee</div>
+          <div class="stat-val">${rec.estimated_fee}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-key">Success Rate</div>
+          <div class="stat-val">${rec.success_rate}</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-key">Settlement</div>
+          <div class="stat-val">${rec.settlement_time}</div>
+        </div>
+      </div>
+      <div class="reasons">
+        ${(rec.key_reasons || []).map(r => `<div class="reason">${r}</div>`).join('')}
+      </div>
+      ${warnings.length ? `
+        <div class="warnings-list">
+          ${warnings.map(w => `<div class="warning-item">${w}</div>`).join('')}
+        </div>` : ''}
+    </div>`;
+}
+
+async function getRecommendation() {
+  const amount = parseFloat(document.getElementById('amount').value);
+  if (!amount || amount <= 0) {
+    showError('Please enter a valid amount.');
+    return;
+  }
+
+  const payload = {
+    amount,
+    currency: document.getElementById('currency').value,
+    country: document.getElementById('country').value,
+    merchant_category: document.getElementById('category').value,
+    payment_method_preference: document.getElementById('payment_method').value,
+    transaction_type: document.getElementById('tx_type').value,
+    priority: selectedPriority,
+  };
+
+  // Show loading
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'flex';
+  document.getElementById('routeBtn').disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/route`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Request failed');
+    }
+
+    const data = await res.json();
+
+    // Check if RAG is live
+    const isDemo = (data.rag_context_used || '').includes('Demo mode');
+    document.getElementById('modePill').textContent = isDemo ? '● DEMO MODE' : '● LIVE RAG';
+    document.getElementById('modePill').className = `mode-pill ${isDemo ? 'mode-demo' : 'mode-live'}`;
+
+    // Summary
+    if (data.summary) {
+      document.getElementById('summaryText').textContent = data.summary;
+      document.getElementById('summaryBox').style.display = 'block';
+    }
+
+    // Cards
+    const cardsEl = document.getElementById('gatewayCards');
+    cardsEl.innerHTML = data.recommendations.map(renderCard).join('');
+
+    // RAG context
+    if (data.rag_context_used) {
+      document.getElementById('ragText').textContent = data.rag_context_used;
+      document.getElementById('ragBox').style.display = 'block';
+    }
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('resultsArea').style.display = 'block';
+
+  } catch (err) {
+    const localHint = API_BASE.startsWith('http')
+      ? 'Make sure the FastAPI server is running on localhost:8000.'
+      : 'Make sure the Vercel API function is deployed and healthy.';
+    showError(`Could not connect to backend. ${localHint}\n\nError: ${err.message}`);
+  } finally {
+    document.getElementById('routeBtn').disabled = false;
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('errorText').textContent = msg;
+  document.getElementById('errorBox').style.display = 'block';
+}
+
+// Allow Enter key to trigger
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') getRecommendation();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+.env
+*.env
+backend/.env
+backend/.venv/
+backend/.venv_run/
+backend/.pipmeta/
+__pycache__/
+*.py[cod]
+.vercel/
