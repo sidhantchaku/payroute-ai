@@ -3,6 +3,10 @@
 **Intelligent Payment Gateway Routing Advisor**  
 Built with RAG + LangChain + FastAPI + Vanilla JS
 
+**Live Demo:** [https://payroute-ai.vercel.app](https://payroute-ai.vercel.app)
+
+![PayRoute AI web app screenshot](docs/payroute-ai-home.png)
+
 ---
 
 ## What It Does

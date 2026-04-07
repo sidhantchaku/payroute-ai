@@ -203,6 +203,14 @@ Consider fees, success rates, settlement timelines, compliance, and the merchant
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse LLM response: {e}")
     except Exception as e:
+        error_text = str(e).lower()
+        if "429" in error_text or "quota" in error_text or "rate" in error_text:
+            fallback = _demo_response(req)
+            fallback.rag_context_used = (
+                "[Demo fallback - Gemini quota or rate limit was reached. "
+                "Try again later or use a higher-quota API key for live AI responses.]"
+            )
+            return fallback
         raise HTTPException(status_code=500, detail=str(e))
 
 
