@@ -11,7 +11,7 @@ Built with RAG + LangChain + FastAPI + Vanilla JS
 
 ## What It Does
 
-PayRoute AI takes a transaction context (amount, country, merchant category, payment method, transaction type) and returns ranked gateway recommendations — each with a score, estimated fee, success rate, settlement timeline, and a natural language explanation powered by Gemini.
+PayRoute AI takes a transaction context (amount, country, merchant category, payment method, transaction type) and returns ranked gateway recommendations - each with a score, estimated fee, success rate, settlement timeline, and a natural language explanation powered by Gemini.
 
 ### Tech Stack
 | Layer | Technology |
@@ -194,7 +194,7 @@ Lists all gateways loaded from the knowledge base.
 
 ## Extending the Project
 
-**Add a new gateway:** Create a new `.md` file in `knowledge_base/` following the same structure. Restart the backend — it will be auto-ingested.
+**Add a new gateway:** Create a new `.md` file in `knowledge_base/` following the same structure. Restart the backend - it will be auto-ingested.
 
 **Swap LLM:** Change `GEMINI_MODEL` in `.env` or the default model in `main.py` to any supported Gemini model.
 
@@ -206,7 +206,7 @@ Lists all gateways loaded from the knowledge base.
 
 ## Interview Talking Points
 
-1. **Why RAG over fine-tuning?** Gateway data changes (new fee structures, new methods) — RAG lets you update the knowledge base without retraining. Fine-tuning would bake stale data into model weights.
+1. **Why RAG over fine-tuning?** Gateway data changes (new fee structures, new methods) - RAG lets you update the knowledge base without retraining. Fine-tuning would bake stale data into model weights.
 
 2. **Chunk size choice (800 tokens, 100 overlap):** Gateway docs have dense tables. 800 tokens captures a full section (e.g. "Transaction Fees + Success Rates") in one chunk, maintaining context. Overlap prevents information loss at boundaries.
 

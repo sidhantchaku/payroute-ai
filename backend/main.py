@@ -315,7 +315,7 @@ def _demo_response(req: TransactionRequest) -> RouteResponse:
                 success_rate="95-98%", settlement_time="T+1 to same-day",
                 key_reasons=[
                     "Highest UPI success rate in the industry (95-98%)",
-                    "Zero MDR on UPI — no transaction cost",
+                    "Zero MDR on UPI - no transaction cost",
                     "Fastest settlement cycle in India"
                 ],
                 warnings=[]
@@ -377,7 +377,7 @@ def _demo_response(req: TransactionRequest) -> RouteResponse:
                 warnings=["Higher fee vs Cashfree for same transaction types"]
             ),
         ]
-        summary = "For cost optimization, Cashfree offers the lowest MDR in India. On high UPI volume, all three gateways are zero MDR — so blended cost depends on your card/NB mix."
+        summary = "For cost optimization, Cashfree offers the lowest MDR in India. On high UPI volume, all three gateways are zero MDR - so blended cost depends on your card/NB mix."
     else:
         recs = [
             GatewayRecommendation(
@@ -427,7 +427,7 @@ def _demo_response(req: TransactionRequest) -> RouteResponse:
             "priority": req.priority,
             "type": req.transaction_type,
         },
-        rag_context_used="[Demo mode — connect a Gemini API key for full RAG-powered recommendations]",
+        rag_context_used="[Demo mode - connect a Gemini API key for full RAG-powered recommendations]",
     )
 
 
