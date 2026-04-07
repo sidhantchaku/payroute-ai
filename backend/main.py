@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 import google.generativeai as genai
@@ -31,6 +32,7 @@ knowledge_context = ""
 qa_chain = None
 
 KNOWLEDGE_BASE_DIR = Path(__file__).parent.parent / "knowledge_base"
+FRONTEND_INDEX = Path(__file__).parent.parent / "public" / "index.html"
 
 
 def _clear_broken_proxy_env() -> None:
@@ -131,6 +133,14 @@ Include exactly 3 ranked gateways. Be specific about fees using the actual trans
 
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
+@app.get("/", response_class=HTMLResponse)
+async def frontend():
+    if FRONTEND_INDEX.exists():
+        return FRONTEND_INDEX.read_text(encoding="utf-8")
+    raise HTTPException(status_code=404, detail="Frontend not found")
+
+
+@app.get("/api/health")
 @app.get("/health")
 async def health():
     return {
@@ -140,6 +150,7 @@ async def health():
     }
 
 
+@app.post("/api/route", response_model=RouteResponse)
 @app.post("/route", response_model=RouteResponse)
 async def route_payment(req: TransactionRequest):
     if qa_chain is None:
@@ -195,6 +206,7 @@ Consider fees, success rates, settlement timelines, compliance, and the merchant
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/gateways")
 @app.get("/gateways")
 async def list_gateways():
     """Return list of gateways in the knowledge base"""
