@@ -192,26 +192,3 @@ Lists all gateways loaded from the knowledge base.
 
 ---
 
-## Extending the Project
-
-**Add a new gateway:** Create a new `.md` file in `knowledge_base/` following the same structure. Restart the backend - it will be auto-ingested.
-
-**Swap LLM:** Change `GEMINI_MODEL` in `.env` or the default model in `main.py` to any supported Gemini model.
-
-**Swap vector store:** Replace `FAISS` with `Chroma`, `Pinecone`, or `Weaviate` for persistent storage.
-
-**Add streaming:** Use `streaming=True` on the Gemini chat model instance and FastAPI's `StreamingResponse`.
-
----
-
-## Interview Talking Points
-
-1. **Why RAG over fine-tuning?** Gateway data changes (new fee structures, new methods) - RAG lets you update the knowledge base without retraining. Fine-tuning would bake stale data into model weights.
-
-2. **Chunk size choice (800 tokens, 100 overlap):** Gateway docs have dense tables. 800 tokens captures a full section (e.g. "Transaction Fees + Success Rates") in one chunk, maintaining context. Overlap prevents information loss at boundaries.
-
-3. **Why FAISS over Pinecone?** For a demo/POC, FAISS runs in-memory with zero infrastructure cost. Production would use a persistent store like Pinecone or Weaviate for updates without restarts.
-
-4. **Structured JSON output:** We prompt the LLM to return strict JSON and parse it. In production, you'd use LangChain's `PydanticOutputParser` or native structured output features for guaranteed schema compliance.
-
-5. **Demo mode:** The fallback rule-based system means the UI is fully demonstrable without spending API credits in a live interview.
