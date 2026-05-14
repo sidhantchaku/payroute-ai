@@ -1,9 +1,8 @@
 # PayRoute AI 🔀
 
-**Intelligent Payment Gateway Routing Advisor**  
-Built with RAG + LangChain + FastAPI + Vanilla JS
+An intelligent payment gateway routing advisor built with RAG (Retrieval-Augmented Generation), LangChain, FastAPI, and vanilla JavaScript.
 
-**Live Demo:** [https://payroute-ai.vercel.app](https://payroute-ai.vercel.app)
+**Try it live:** [https://payroute-ai.vercel.app](https://payroute-ai.vercel.app)
 
 ![PayRoute AI web app screenshot](docs/payroute-ai-home.png)
 
@@ -11,28 +10,48 @@ Built with RAG + LangChain + FastAPI + Vanilla JS
 
 ## What It Does
 
-PayRoute AI takes a transaction context (amount, country, merchant category, payment method, transaction type) and returns ranked gateway recommendations - each with a score, estimated fee, success rate, settlement timeline, and a natural language explanation powered by Gemini.
+PayRoute AI helps you choose the right payment gateway for any transaction. Just describe your scenario (amount, country, merchant type, payment method, transaction type), and it ranks available gateways with recommendations, estimated fees, success rates, and reasoning.
 
-### Tech Stack
+Each recommendation includes:
+- A confidence score
+- Estimated transaction fee
+- Expected success rate
+- Settlement timeline
+- Key reasons for the recommendation
+- Any potential warnings
+
+## How It Works
+
+The system uses Retrieval-Augmented Generation (RAG) to stay accurate and current:
+
+1. Your transaction details are sent to the backend
+2. A LangChain agent retrieves relevant gateway information from local markdown documents
+3. The Gemini LLM processes this information with a structured prompt
+4. You get back ranked gateway recommendations as clean JSON
+
+This approach keeps the system grounded in actual gateway data while using AI to make intelligent comparisons.
+
+## Tech Stack
+
 | Layer | Technology |
 |-------|-----------|
 | LLM Orchestration | Gemini SDK |
-| Knowledge Retrieval | Local markdown context |
-| Embeddings | Not required for Vercel deployment |
-| LLM | Gemini |
-| API | FastAPI + Uvicorn |
-| Frontend | Vanilla HTML/CSS/JS (zero deps) |
+| Knowledge Retrieval | Local markdown files |
+| Vector Embeddings | FAISS (optional for Vercel) |
+| LLM Model | Gemini |
+| API Server | FastAPI + Uvicorn |
+| Frontend | Vanilla HTML/CSS/JS (no dependencies) |
 
 ---
 
-## Project Structure
+## Project Layout
 
 ```
 payroute-ai/
 ├── backend/
-│   ├── main.py              # FastAPI app + LangChain RAG logic
+│   ├── main.py              # FastAPI app with LangChain RAG
 │   ├── requirements.txt
-│   └── .env.example         # → copy to .env and add API key
+│   └── .env.example         # Copy this to .env and add your API key
 ├── frontend/
 │   └── index.html           # Single-file UI
 └── knowledge_base/
@@ -45,23 +64,26 @@ payroute-ai/
 
 ---
 
-## Setup
+## Getting Started
 
 ### 1. Install dependencies
+
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
 ### 2. Add your Gemini API key
+
 ```bash
 cp .env.example .env
 # Edit .env and add your GOOGLE_API_KEY
 ```
 
-> **No API key?** The app runs in Demo Mode with rule-based recommendations. Still fully functional for demonstrations.
+**Note:** If you don't have a Gemini API key, the app still works in Demo Mode with rule-based recommendations. Perfect for testing.
 
 ### 3. Start the backend
+
 ```bash
 cd backend
 uvicorn main:app --reload
@@ -69,32 +91,33 @@ uvicorn main:app --reload
 ```
 
 ### 4. Open the frontend
+
 ```bash
-# Just open the file in a browser:
 open frontend/index.html
 ```
 
-## Deploy To Vercel
+---
 
-This repo is now set up to deploy as a single Vercel project:
-- `public/index.html` serves the frontend
-- `api/index.py` exposes the FastAPI backend as a Vercel Python function
-- `knowledge_base/` is loaded by the API at runtime
+## Deploying to Vercel
 
-### 1. Push the project to GitHub
-Make sure the repo includes:
-- `api/index.py`
-- `public/index.html`
+The repo is set up for seamless Vercel deployment:
+
+### 1. Push to GitHub
+
+Make sure your repo contains:
+- `api/index.py` (FastAPI backend)
+- `public/index.html` (frontend)
 - `vercel.json`
 - `requirements.txt`
 
-### 2. Import the repo into Vercel
-In Vercel:
-- Create a new project from your GitHub repo
+### 2. Import into Vercel
+
+- Create a new Vercel project from your GitHub repo
 - Keep the project root as the repository root
 
 ### 3. Add environment variables
-In the Vercel project settings, add:
+
+In Vercel project settings:
 
 ```bash
 GOOGLE_API_KEY=your-gemini-api-key
@@ -102,55 +125,58 @@ GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### 4. Deploy
-Vercel will install dependencies from the root `requirements.txt` and serve:
-- `/` -> frontend
-- `/api/*` -> FastAPI backend
 
-### 5. Verify
-After deploy, open:
-- `/`
-- `/api/health`
+Vercel handles the rest. It will:
+- Install dependencies from `requirements.txt`
+- Serve `/` as the frontend
+- Serve `/api/*` as the FastAPI backend
+
+### 5. Verify deployment
+
+After deployment, check:
+- `https://yourapp.vercel.app` (frontend)
+- `https://yourapp.vercel.app/api/health` (backend status)
 
 ---
 
-## How It Works (RAG Pipeline)
+## The RAG Pipeline
+
+Here's how recommendations are generated:
 
 ```
-User Query
-    │
-    ▼
+Transaction Details
+      │
+      ▼
 LangChain Agent
-    │
-    ├──► FAISS Vector Store ──► knowledge_base/*.md (5 gateway docs)
-    │         (semantic search, top-8 chunks)
-    │
-    ▼
-Gemini (structured prompt)
-    │
-    ▼
-JSON Response: ranked gateways with scores, fees, reasons
-    │
-    ▼
-React-free Frontend renders gateway cards
+      │
+      ├──► Semantic Search ──► knowledge_base/*.md
+      │     (FAISS Vector Store, top-8 chunks)
+      │
+      ▼
+Gemini LLM
+(Structured prompt + context)
+      │
+      ▼
+Ranked Gateway Recommendations
+(JSON with scores, fees, reasons)
+      │
+      ▼
+Frontend Renders Cards
 ```
 
-On startup, the backend:
-1. Loads all `.md` files from `knowledge_base/`
-2. Splits into 800-token chunks with 100-token overlap
-3. Embeds all chunks using Gemini embeddings
-4. Stores in FAISS (in-memory, fast)
+**On startup:** The backend loads all markdown files from `knowledge_base/`, chunks them (800 tokens with 100-token overlap), embeds them, and stores them in FAISS for fast retrieval.
 
-On each `/route` request:
-1. Formats the transaction as a structured query
-2. Retrieves top-8 most relevant chunks from FAISS
-3. Sends chunks + query to Gemini with a structured JSON prompt
-4. Parses and returns the recommendation
+**On each request:** The transaction is formatted as a semantic query, top-8 relevant chunks are retrieved, and Gemini generates structured recommendations.
 
 ---
 
 ## API Reference
 
 ### `POST /route`
+
+Send transaction details and get ranked gateway recommendations.
+
+**Request:**
 ```json
 {
   "amount": 50000,
@@ -174,21 +200,33 @@ On each `/route` request:
       "estimated_fee": "0% (UPI zero MDR)",
       "success_rate": "95-98%",
       "settlement_time": "T+1 to same-day",
-      "key_reasons": ["..."],
+      "key_reasons": [
+        "Zero MDR on UPI payments",
+        "Excellent success rate",
+        "Fast settlement"
+      ],
       "warnings": []
     }
   ],
-  "summary": "...",
-  "transaction_context": { ... },
-  "rag_context_used": "..."
+  "summary": "Cashfree is optimal for UPI transactions...",
+  "transaction_context": { /* echo of input */ },
+  "rag_context_used": "Chunk 1, Chunk 2, ..."
 }
 ```
 
 ### `GET /health`
-Returns vectorstore and chain readiness status.
+
+Check if the vectorstore and recommendation chain are ready.
 
 ### `GET /gateways`
-Lists all gateways loaded from the knowledge base.
+
+List all payment gateways currently loaded from the knowledge base.
 
 ---
 
+## Design Notes
+
+- **Zero frontend dependencies:** The UI is vanilla JS, HTML, and CSS. No frameworks, no npm installs needed.
+- **Flexible backend:** FastAPI makes it easy to extend with new endpoints or modify the LLM logic.
+- **Modular knowledge base:** Adding a new gateway is just a new markdown file in `knowledge_base/`.
+- **Production-ready on Vercel:** The deployment setup handles API secrets and serverless function limits gracefully.
